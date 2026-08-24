@@ -1,0 +1,8 @@
+pymupdf
+pdfplumber
+anthropic
+chromadb
+sentence-transformers
+streamlit
+pandas
+python-dotenv
