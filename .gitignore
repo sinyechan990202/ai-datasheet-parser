@@ -1,9 +1,6 @@
 .env
 .venv/
-chroma_db/
-chroma_db_uploads/
 uploads/
-parse_cache.sqlite3
 query_log.jsonl
 __pycache__/
 *.pyc
