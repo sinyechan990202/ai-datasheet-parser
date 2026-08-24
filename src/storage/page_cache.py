@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS page_parses (
     pipeline_version TEXT NOT NULL,
     tier0_text TEXT,
     tier0_shapes TEXT,
+    tier0_waveform_ascii TEXT,
     tier1_tables TEXT,
     router_reason TEXT,
     used_vision INTEGER NOT NULL,
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS page_parses (
 _ADDITIONAL_COLUMNS = {
     "tier1_tables": "TEXT",
     "tier0_shapes": "TEXT",
+    "tier0_waveform_ascii": "TEXT",
 }
 
 
@@ -63,7 +65,7 @@ def get_full(source_file: str, page_number: int, pipeline_version: str) -> dict 
     """Tier0/1/2 출력을 단계별로 그대로 보고 싶을 때 쓰는 조회 함수 (디버깅/품질 점검용)."""
     conn = _connect()
     row = conn.execute(
-        "SELECT tier0_text, tier1_tables, router_reason, used_vision, vision_description, "
+        "SELECT tier0_text, tier0_waveform_ascii, tier1_tables, router_reason, used_vision, vision_description, "
         "combined_text, created_at FROM page_parses "
         "WHERE source_file = ? AND page_number = ? AND pipeline_version = ?",
         (source_file, page_number, pipeline_version),
@@ -71,11 +73,13 @@ def get_full(source_file: str, page_number: int, pipeline_version: str) -> dict 
     conn.close()
     if row is None:
         return None
-    tier0_text, tier1_tables, router_reason, used_vision, vision_description, combined_text, created_at = row
+    (tier0_text, tier0_waveform_ascii, tier1_tables, router_reason, used_vision, vision_description,
+     combined_text, created_at) = row
     return {
         "source_file": source_file,
         "page_number": page_number,
         "tier0_text": tier0_text,
+        "tier0_waveform_ascii": tier0_waveform_ascii,
         "tier1_tables": tier1_tables,
         "router_reason": router_reason,
         "used_vision": bool(used_vision),
@@ -165,6 +169,31 @@ def update_tier0_shapes(source_file: str, page_number: int, pipeline_version: st
         "UPDATE page_parses SET tier0_shapes = ? "
         "WHERE source_file = ? AND page_number = ? AND pipeline_version = ?",
         (tier0_shapes, source_file, page_number, pipeline_version),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_pages_missing_tier0_waveform_ascii(source_file: str, pipeline_version: str) -> list[int]:
+    """tier0_waveform_ascii 컬럼이 생기기 전에 저장된 행들의 페이지 번호를 찾는다."""
+    conn = _connect()
+    rows = conn.execute(
+        "SELECT page_number FROM page_parses "
+        "WHERE source_file = ? AND pipeline_version = ? AND tier0_waveform_ascii IS NULL",
+        (source_file, pipeline_version),
+    ).fetchall()
+    conn.close()
+    return [r[0] for r in rows]
+
+
+def update_tier0_waveform_ascii(source_file: str, page_number: int, pipeline_version: str, tier0_waveform_ascii: str) -> None:
+    """tier0_waveform_ascii만 갱신한다. 좌표 기반 ASCII 파형 재구성 결과도 tier0_shapes와 마찬가지로
+    검색·요약 파이프라인에 섞지 않고 별도 컬럼에서 확인만 하기 위한 실험적 데이터다."""
+    conn = _connect()
+    conn.execute(
+        "UPDATE page_parses SET tier0_waveform_ascii = ? "
+        "WHERE source_file = ? AND page_number = ? AND pipeline_version = ?",
+        (tier0_waveform_ascii, source_file, page_number, pipeline_version),
     )
     conn.commit()
     conn.close()
