@@ -7,3 +7,7 @@ __pycache__/
 CLAUDE_API_KEY_YECHAN.txt
 .DS_Store
 streamlit.log
+
+# tg2discord
+*.session
+*.session-journal
