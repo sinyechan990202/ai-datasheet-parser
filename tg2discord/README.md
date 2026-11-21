@@ -35,7 +35,7 @@
 
 ```bash
 # 내 PC/폰에서
-ssh -i ssh-key-2026-11-20.key ubuntu@161.33.206.229
+ssh -i ssh-key-2026-11-20.key ubuntu@<서버_공인IP>
 
 # 서버에서
 git clone -b claude/notion-oracle-ssh-key-kfq987 https://github.com/sinyechan990202/ai-datasheet-parser.git
@@ -51,7 +51,7 @@ sudo systemctl start tg2discord                # 상시 실행
 journalctl -u tg2discord -f                    # 로그
 ```
 
-저장소가 private 이면 `git clone` 대신 PC에서 `scp -i ssh-key-2026-11-20.key -r tg2discord ubuntu@161.33.206.229:~/` 로 복사.
+저장소가 private 이면 `git clone` 대신 PC에서 `scp -i ssh-key-2026-11-20.key -r tg2discord ubuntu@<서버_공인IP>:~/` 로 복사.
 
 `.env` 를 바꾼 뒤에는 `sudo systemctl restart tg2discord`.
 
